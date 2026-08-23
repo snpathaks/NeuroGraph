@@ -1,0 +1,9 @@
+# NeuroGraph — Git LFS tracking rules
+# Run once to initialise: git lfs install
+
+# ── Trained ML model binaries ──────────────────────────
+*.pkl filter=lfs diff=lfs merge=lfs -text
+
+# ── Large data files (optional, uncomment if needed) ───
+# *.csv filter=lfs diff=lfs merge=lfs -text
+# *.txt filter=lfs diff=lfs merge=lfs -text

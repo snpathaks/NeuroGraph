@@ -1,0 +1,19 @@
+# NeuroGraph — Python Dependencies
+# Install with: pip install -r requirements.txt
+
+# ── Core scientific stack ──────────────────────────────────────────────────────
+numpy>=1.24.0
+pandas>=2.0.0
+scipy>=1.11.0
+
+# ── Machine Learning ───────────────────────────────────────────────────────────
+scikit-learn>=1.3.0
+xgboost>=2.0.0
+
+# ── Visualisation ─────────────────────────────────────────────────────────────
+matplotlib>=3.7.0
+plotly>=5.17.0
+
+# ── Streamlit web app ─────────────────────────────────────────────────────────
+streamlit>=1.28.0
+streamlit-drawable-canvas>=0.9.3
