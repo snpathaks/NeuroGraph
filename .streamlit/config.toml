@@ -1,0 +1,13 @@
+[server]
+headless = true
+address = "0.0.0.0"
+port = 10000
+enableCORS = false
+enableXsrfProtection = false
+
+[theme]
+primaryColor = "#2196F3"
+backgroundColor = "#0d1117"
+secondaryBackgroundColor = "#161b22"
+textColor = "#ffffff"
+font = "sans serif"
