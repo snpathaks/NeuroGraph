@@ -1,0 +1,353 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>NeuroGraph — Parkinson's Detection</title>
+  <meta name="description"
+    content="NeuroGraph analyses handwriting stroke dynamics to screen for early Parkinson's disease indicators." />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="dashboard.css" />
+</head>
+
+<body>
+
+  <!-- Theme toggle -->
+  <button class="theme-toggle" id="themeToggle" title="Toggle light/dark mode">☀️ Light</button>
+
+  <!-- ═══════════════════════════════════════════
+     SIDEBAR
+════════════════════════════════════════════ -->
+  <aside class="sidebar">
+
+    <!-- Logo -->
+    <div class="logo">
+      <div class="logo-icon">
+        <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+          <path
+            d="M12 2C8.5 2 6 4.5 6 7.5c0 1.5.5 2.8 1.4 3.8C6.5 12.1 6 13.2 6 14.5 6 17 7.5 19 10 19.7V21h4v-1.3C16.5 19 18 17 18 14.5c0-1.3-.5-2.4-1.4-3.2C17.5 10.3 18 9 18 7.5 18 4.5 15.5 2 12 2z" />
+        </svg>
+      </div>
+      <span class="logo-name">NeuroGraph</span>
+    </div>
+
+    <!-- Navigate -->
+    <div class="sidebar-section">
+      <div class="sidebar-label">Navigate</div>
+
+      <button class="nav-item active" id="nav-draw" onclick="switchTab('draw', this)">
+        <svg viewBox="0 0 24 24">
+          <path d="M12 20h9" />
+          <path d="M16.5 3.5a2.121 2.121 0 013 3L7 19l-4 1 1-4L16.5 3.5z" />
+        </svg>
+        Live Draw
+      </button>
+
+      <button class="nav-item" id="nav-upload" onclick="switchTab('upload', this)">
+        <svg viewBox="0 0 24 24">
+          <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4" />
+          <polyline points="17 8 12 3 7 8" />
+          <line x1="12" y1="3" x2="12" y2="15" />
+        </svg>
+        Upload Stroke File
+      </button>
+
+      <button class="nav-item" id="nav-explorer" onclick="switchTab('explorer', this)">
+        <svg viewBox="0 0 24 24">
+          <rect x="18" y="3" width="4" height="18" />
+          <rect x="10" y="8" width="4" height="13" />
+          <rect x="2" y="13" width="4" height="8" />
+        </svg>
+        Dataset Explorer
+      </button>
+    </div>
+
+    <!-- Model -->
+    <div class="sidebar-section">
+      <div class="sidebar-label">Model</div>
+      <select class="model-select" id="modelSelect">
+        <option value="rf">Random Forest</option>
+        <option value="xgb">XGBoost</option>
+      </select>
+    </div>
+
+    <!-- About -->
+    <div class="sidebar-about">
+      <div class="sidebar-label" style="margin-bottom:8px">About</div>
+      <p class="about-text">
+        NeuroGraph analyses handwriting stroke dynamics — velocity, jerk,
+        tremor frequency, and pressure coupling — to screen for early
+        Parkinson's disease indicators.
+      </p>
+      <p class="about-text" style="margin-top:8px; font-size:11px;">
+        Dataset: UCI Spiral Drawing Tablet · 40 subjects
+      </p>
+    </div>
+
+  </aside>
+
+  <!-- ═══════════════════════════════════════════
+     MAIN CONTENT
+════════════════════════════════════════════ -->
+  <main class="main">
+
+    <!-- ── TAB: LIVE DRAW ─────────────────────────── -->
+    <div class="tab-view active" id="tab-draw">
+
+      <div class="page-header">
+        <h1 class="page-title">Draw a spiral below</h1>
+        <p class="page-subtitle">Draw any continuous stroke — NeuroGraph will extract movement features and estimate
+          Parkinson's likelihood in real time.</p>
+      </div>
+
+      <div class="content-row">
+
+        <!-- Canvas -->
+        <div>
+          <div class="canvas-wrap">
+            <canvas id="drawCanvas"></canvas>
+            <div class="canvas-hint" id="canvasHint">
+              <svg viewBox="0 0 24 24">
+                <circle cx="12" cy="12" r="10" />
+                <path d="M12 8c-2.2 0-4 1.8-4 4s1.8 4 4 4 4-1.8 4-4-1.8-4-4-4" />
+                <path d="M12 5c0 0 3.5 3.5 3.5 7S12 19 12 19" />
+              </svg>
+              <span class="canvas-hint-text">Draw a spiral here &mdash; start from the centre</span>
+            </div>
+          </div>
+          <div class="canvas-toolbar">
+            <button class="canvas-btn danger" onclick="clearCanvas()">✕ Clear</button>
+            <span style="margin-left:auto;font-size:11px;color:var(--muted)" id="pointCount">0 points</span>
+          </div>
+        </div>
+
+        <!-- Right col -->
+        <div class="right-col">
+
+          <!-- Stat: PD Likelihood -->
+          <div class="stat-card">
+            <div class="stat-label">PD Likelihood</div>
+            <div class="stat-value" id="statPD">—<span class="stat-unit"></span></div>
+            <div id="statPDBadge"></div>
+            <div class="result-indicator">
+              <div class="result-indicator-bar" id="pdBar" style="width:0%;background:#ef4444"></div>
+            </div>
+          </div>
+
+          <!-- Stat: Tremor Frequency -->
+          <div class="stat-card">
+            <div class="stat-label">Tremor Frequency</div>
+            <div class="stat-value" id="statTremor">—<span class="stat-unit"></span></div>
+            <div id="statTremorBadge"></div>
+            <div class="result-indicator">
+              <div class="result-indicator-bar" id="tremorBar" style="width:0%;background:var(--accent)"></div>
+            </div>
+          </div>
+
+          <!-- Stat: Jerk Mean -->
+          <div class="stat-card">
+            <div class="stat-label">Jerk Mean</div>
+            <div class="stat-value" id="statJerk">—</div>
+          </div>
+
+          <!-- Buttons -->
+          <button class="btn-primary" id="analyseBtn" onclick="analyseStroke()">
+            <svg viewBox="0 0 24 24">
+              <polygon points="5 3 19 12 5 21 5 3" />
+            </svg>
+            Analyse Stroke
+          </button>
+          <button class="btn-secondary" onclick="clearCanvas()">Clear canvas</button>
+
+        </div>
+      </div>
+
+      <!-- Instructions -->
+      <div class="instructions-card">
+        <div class="card-title">Instructions</div>
+        <div class="steps-grid">
+          <div class="step">
+            <div class="step-num">1</div>
+            <div class="step-text"><strong>Draw a spiral</strong> on the canvas starting from the centre and spiralling
+              outward.</div>
+          </div>
+          <div class="step">
+            <div class="step-num">2</div>
+            <div class="step-text"><strong>Keep it smooth</strong> — the model detects tremor and jerk, so draw
+              naturally.</div>
+          </div>
+          <div class="step">
+            <div class="step-num">3</div>
+            <div class="step-text"><strong>Click Analyse Stroke</strong> once done. Features are extracted instantly.
+            </div>
+          </div>
+          <div class="step">
+            <div class="step-num">4</div>
+            <div class="step-text"><strong>Review results</strong> — PD likelihood, tremor frequency, and jerk appear on
+              the right.</div>
+          </div>
+        </div>
+      </div>
+
+    </div><!-- /tab-draw -->
+
+
+    <!-- ── TAB: UPLOAD ────────────────────────────── -->
+    <div class="tab-view" id="tab-upload">
+
+      <div class="page-header">
+        <h1 class="page-title">Upload a stroke file</h1>
+        <p class="page-subtitle">Upload a raw <code
+            style="font-size:12px;background:var(--accent-bg);color:var(--accent);padding:1px 5px;border-radius:4px">.txt</code>
+          file from the UCI Parkinson spiral dataset — semicolon-separated, 7 columns.</p>
+      </div>
+
+      <div class="content-row">
+        <div>
+          <label for="fileInput">
+            <div class="upload-zone" id="uploadZone">
+              <svg viewBox="0 0 24 24">
+                <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4" />
+                <polyline points="17 8 12 3 7 8" />
+                <line x1="12" y1="3" x2="12" y2="15" />
+              </svg>
+              <div class="upload-zone-text">
+                <strong style="color:var(--text);font-weight:500">Click to upload</strong> or drag and drop<br />
+                <span style="font-size:12px">Semicolon-separated .txt — X;Y;Btn;Pressure;Grip;Timestamp;TestID</span>
+              </div>
+            </div>
+          </label>
+          <input type="file" id="fileInput" accept=".txt,.csv" onchange="handleFileUpload(event)" />
+
+          <div class="instructions-card" style="margin-top:16px">
+            <div class="card-title">Expected file format</div>
+            <div class="steps-grid">
+              <div class="step">
+                <div class="step-num">0</div>
+                <div class="step-text"><strong>X, Y</strong> — pen coordinates on tablet surface</div>
+              </div>
+              <div class="step">
+                <div class="step-num">2</div>
+                <div class="step-text"><strong>Button status</strong> — pen up/down (0 or 1)</div>
+              </div>
+              <div class="step">
+                <div class="step-num">3</div>
+                <div class="step-text"><strong>Pressure</strong> — axial pen pressure (0–1023)</div>
+              </div>
+              <div class="step">
+                <div class="step-num">5</div>
+                <div class="step-text"><strong>Timestamp</strong> — milliseconds since recording start</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="right-col">
+          <div class="stat-card">
+            <div class="stat-label">File loaded</div>
+            <div class="stat-value" id="uploadFileName" style="font-size:15px;letter-spacing:0">—</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-label">Rows</div>
+            <div class="stat-value" id="uploadRows">—</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-label">PD Likelihood</div>
+            <div class="stat-value" id="uploadPD">—</div>
+            <div id="uploadPDBadge"></div>
+          </div>
+          <button class="btn-primary" onclick="analyseUpload()">
+            <svg viewBox="0 0 24 24">
+              <polygon points="5 3 19 12 5 21 5 3" />
+            </svg>
+            Analyse File
+          </button>
+        </div>
+      </div>
+
+    </div><!-- /tab-upload -->
+
+
+    <!-- ── TAB: DATASET EXPLORER ──────────────────── -->
+    <div class="tab-view" id="tab-explorer">
+
+      <div class="page-header">
+        <h1 class="page-title">Dataset Explorer</h1>
+        <p class="page-subtitle">UCI Spiral Drawing Tablet dataset — 40 subjects, 31 extracted features, two classes.
+        </p>
+      </div>
+
+      <!-- Summary stat tiles -->
+      <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:12px">
+        <div class="stat-card">
+          <div class="stat-label">Total Subjects</div>
+          <div class="stat-value">40</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">Parkinson's</div>
+          <div class="stat-value" style="color:#ef4444">25</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">Control</div>
+          <div class="stat-value" style="color:#22c55e">15</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">Features</div>
+          <div class="stat-value" style="color:var(--accent)">31</div>
+        </div>
+      </div>
+
+      <!-- Model performance -->
+      <div class="instructions-card">
+        <div class="card-title">Model Performance</div>
+        <div class="steps-grid">
+          <div class="step">
+            <div class="step-num" style="width:auto;padding:0 8px;border-radius:5px">RF</div>
+            <div class="step-text"><strong>Random Forest</strong> — Accuracy 87.5% · F1 0.91 · <strong
+                style="color:var(--accent)">ROC-AUC 0.933</strong></div>
+          </div>
+          <div class="step">
+            <div class="step-num" style="width:auto;padding:0 8px;border-radius:5px">XGB</div>
+            <div class="step-text"><strong>XGBoost</strong> — Accuracy 62.5% · F1 0.73 · ROC-AUC 0.867</div>
+          </div>
+          <div class="step">
+            <div class="step-num">★</div>
+            <div class="step-text">Best model: <strong>Random Forest</strong> by ROC-AUC on 8-sample hold-out</div>
+          </div>
+          <div class="step">
+            <div class="step-num">i</div>
+            <div class="step-text">5-fold CV AUC: <strong>0.853 ± 0.098</strong> (RF) · 0.820 ± 0.149 (XGB)</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Sample data table -->
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Subject ID</th>
+              <th>Group</th>
+              <th>Jerk Mean</th>
+              <th>Tremor Ratio</th>
+              <th>Dir. Entropy</th>
+              <th>Pen Lift</th>
+              <th>Pressure Corr.</th>
+            </tr>
+          </thead>
+          <tbody id="dataTableBody">
+            <!-- populated by dashboard.js -->
+          </tbody>
+        </table>
+      </div>
+
+    </div><!-- /tab-explorer -->
+
+  </main>
+
+  <script src="dashboard.js"></script>
+</body>
+
+</html>
