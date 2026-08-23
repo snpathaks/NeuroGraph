@@ -1,4 +1,5 @@
 # 🧠 NeuroGraph — Parkinson's Detection via Handwriting Analysis
+streamlit : https://neurograph-hrzhqmnq8qdouqmarsm3c3.streamlit.app/
 
 > **Early Parkinson's Disease detection from digitized pen-tablet spiral drawings using handcrafted signal features and ensemble machine learning.**
 
@@ -230,9 +231,4 @@ Top features by Random Forest Gini Importance (plot saved to `models/feature_imp
 
 ---
 
-## 📚 References
 
-- Isenkul, M.E.; Sakar, B.E.; Kursun, O. *"Improved spiral test using digitized graphics tablet for monitoring Parkinson's disease."* ICEHTM 2014.
-- UCI ML Repository — [Parkinson Disease Spiral Drawings Dataset](https://archive.ics.uci.edu/ml/datasets/Parkinson+Disease+Spiral+Drawings+Using+Digitized+Graphics+Tablet)
-- Breiman, L. *"Random Forests."* Machine Learning, 45, 5–32 (2001).
-- Chen, T. & Guestrin, C. *"XGBoost: A Scalable Tree Boosting System."* KDD 2016.
