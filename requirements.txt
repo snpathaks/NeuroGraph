@@ -14,6 +14,10 @@ xgboost>=2.0.0
 matplotlib>=3.7.0
 plotly>=5.17.0
 
-# ── Streamlit web app ─────────────────────────────────────────────────────────
-streamlit>=1.28.0
-streamlit-drawable-canvas>=0.9.3
+# ── Flask web server ───────────────────────────────────────────────────────────
+flask>=3.0.0
+gunicorn>=21.2.0        # production WSGI server for Render
+
+# ── Streamlit (kept for reference / model.py compatibility) ───────────────────
+# streamlit>=1.28.0
+# streamlit-drawable-canvas>=0.9.3
